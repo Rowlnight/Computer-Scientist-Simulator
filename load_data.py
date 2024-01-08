@@ -62,6 +62,8 @@ def get_data_for_new_game():
     research_days = 0
     research_result = researches_get_list(random.randint(1, 5))
 
+    mind = 100
+
     company_profit_upgrade_cost_now = 50
     company_profit_upgrade_levl_now = 0
 
@@ -83,5 +85,5 @@ def get_data_for_new_game():
             company_profit_upgrade_cost_now, company_profit_upgrade_levl_now,
             SKILL_BONUS_upgrade_cost_now, SKILL_BONUS_upgrade_levl_now,
             repair_bonus_upgrade_cost_now, repair_bonus_upgrade_levl_now,
-            bonus_sales_upgrade_cost_now, bonus_sales_upgrade_levl_now]
+            bonus_sales_upgrade_cost_now, bonus_sales_upgrade_levl_now, mind]
             
