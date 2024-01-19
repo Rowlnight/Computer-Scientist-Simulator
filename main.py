@@ -1016,13 +1016,11 @@ class Main_game_logick:
                     self.mind_group[mind_group][0] += mind
                 else:
                     self.mind_group[mind_group][0] = self.mind_group[mind_group][1]
-        print("added mind")
+        print(f"added mind {mind}")
 
     def day_mind_control(self):  # изменение разума при окончании дня
+        print(self.mind)
         self.add_mind(self.mind_on_sleep)
-        for i in self.mind_group.items():
-            self.mind += i[1][1]
-            self.mind_group[i[0]][1] = 0
 
         if self.mind > 1000 and self.mind_stage >= 4:
             self.mind = 1000
@@ -1031,6 +1029,7 @@ class Main_game_logick:
         elif self.mind > 1000:
             self.mind = 0
             self.mind_stage += 1
+            print("added mind stage")
             if self.mind_stage == 4:
                 pygame.mixer.music.unload()
                 pygame.mixer.music.load(mind_4)
