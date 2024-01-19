@@ -430,7 +430,6 @@ class Main_game_logick:
         self.spent_per_turn = 0
         self.received_per_turn = 0
 
-        self.add_mind(1200)
         self.day_mind_control()
 
         self.game_mode = 'game'
