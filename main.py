@@ -41,6 +41,7 @@ button_sound = pygame.mixer.Sound(dir + '\\Data\\sounds\\button.mp3')
 fear = pygame.mixer.Sound(dir + '\\Data\\sounds\\fear.mp3')
 threat_has_passed = pygame.mixer.Sound(dir + '\\Data\\sounds\\threat_has_passed.mp3')
 screamer2_sound = pygame.mixer.Sound(dir + '\\Data\\sounds\\screamer2_sound.mp3')
+mind_4 = dir + '\\Data\\sounds\\mind4.mp3'
 
 sain_sound_1 = pygame.mixer.Sound(dir + '\\Data\\sounds\\sain_sound_1.mp3')
 sain_sound_2 = pygame.mixer.Sound(dir + '\\Data\\sounds\\sain_sound_2.mp3')
@@ -78,7 +79,7 @@ class Improvements:
         pygame.draw.rect(screen, GREY, (x, y, self.width, self.height))
         if x < mouse[0] < x + self.width and y < mouse[1] < y + self.height:
             if click[0] == 1 and self.start_cost <= GAME.SKILLS and MCT.CL_check:
-                pygame.mixer.Sound.play(level_up)
+                pygame.mixer.Sound.play(GAME.level_up)
                 pygame.time.delay(30)
                 
                 GAME.MONEY = GAME.MONEY - self.start_cost
@@ -247,6 +248,18 @@ class Main_game_logick:
         self.level_up = pygame.mixer.Sound(dir + '\\Data\\sounds\\level_up.mp3')
         self.update_info = pygame.mixer.Sound(dir + '\\Data\\sounds\\update_info.mp3')
 
+        self.max_mind_per_minute = 500
+        self.mind_per_minute = 25
+
+        self.max_mind_on_repair = 500
+        self.mind_on_repair = 100
+
+        self.mind_on_sleep = -200
+
+        self.mind_group = {"time": ["разум сейчас", 500],
+                           "repair": ["разум сейчас", 500]}
+
+
     def get_improvements(self):
         self.company_profit_upgrade = Improvements(430, 60, 'Улучшить доход компании',
                                                    self.company_profit_upgrade_cost_now, 50,
@@ -277,7 +290,11 @@ class Main_game_logick:
         self.company_profit_upgrade_cost_now, self.company_profit_upgrade_levl_now,
         self.SKILL_BONUS_upgrade_cost_now, self.SKILL_BONUS_upgrade_levl_now,
         self.repair_bonus_upgrade_cost_now, self.repair_bonus_upgrade_levl_now,
-        self.bonus_sales_upgrade_cost_now, self.bonus_sales_upgrade_levl_now, self.mind] = load_data.get_data_for_new_game()
+        self.bonus_sales_upgrade_cost_now, self.bonus_sales_upgrade_levl_now,
+
+        self.mind, self.mind_stage, self.mind_group["time"][0], self.mind_group["repair"][0]
+
+        ] = load_data.get_data_for_new_game()
 
         self.get_improvements()
         self.get_plot()
@@ -293,7 +310,10 @@ class Main_game_logick:
                 self.company, self.company_profit, self.total_sold, self.total_money_spent, self.total_money_earned, self.purchased_for, self.research_days,
                 self.research_started, self.research_result, self.company_profit_upgrade_cost_now, self.company_profit_upgrade_levl_now,
                 self.SKILL_BONUS_upgrade_cost_now, self.SKILL_BONUS_upgrade_levl_now, self.repair_bonus_upgrade_cost_now, self.repair_bonus_upgrade_levl_now,
-                self.bonus_sales_upgrade_cost_now, self.bonus_sales_upgrade_levl_now, self.mind] = pickle.load(f)
+                self.bonus_sales_upgrade_cost_now, self.bonus_sales_upgrade_levl_now,
+
+                self.mind, self.mind_stage, self.mind_group["time"][0], self.mind_group["repair"][0]] = pickle.load(f)
+
         except Exception as error:
             print(error)
             return
@@ -305,7 +325,7 @@ class Main_game_logick:
         self.SKILL_BONUS_upgrade = Improvements(430, 60, 'Улучшить прирост очков навыка', self.SKILL_BONUS_upgrade_cost_now, 5, self.SKILL_BONUS_upgrade_levl_now, 'improve_SKILL_BONUS', 1)
         self.repair_bonus_upgrade = Improvements(430, 60, 'Улучшить бонус починки', self.repair_bonus_upgrade_cost_now, 5, self.repair_bonus_upgrade_levl_now, 'improve_repair_bonus', 0.1)
         self.bonus_sales_upgrade = Improvements(430, 60, 'Улучшить бонус продажи без починки', self.bonus_sales_upgrade_cost_now, 5, self.bonus_sales_upgrade_levl_now, 'improve_bonus_sales', 0.05)
-        
+
         video_background.bg_now = dir + '\\Data\\textures\\game.mp4'
         self.game_mode = 'game'
 
@@ -318,6 +338,9 @@ class Main_game_logick:
         repair_bonus_upgrade_levl_now = self.repair_bonus_upgrade.get_levl()
         bonus_sales_upgrade_cost_now = self.bonus_sales_upgrade.get_cost()
         bonus_sales_upgrade_levl_now = self.bonus_sales_upgrade.get_levl()
+
+        self.current_mind_on_repair = self.mind_group["repair"][0]
+        self.current_mind_per_minute = self.mind_group["time"][0]
     
         with open(dir + '\\Data\\Save\\save.dat', 'wb') as f:
             pickle.dump([self.can_buy, self.is_repaired,
@@ -336,7 +359,9 @@ class Main_game_logick:
                          company_profit_upgrade_cost_now, company_profit_upgrade_levl_now,
                          SKILL_BONUS_upgrade_cost_now, SKILL_BONUS_upgrade_levl_now,
                          repair_bonus_upgrade_cost_now, repair_bonus_upgrade_levl_now,
-                         bonus_sales_upgrade_cost_now, bonus_sales_upgrade_levl_now, self.mind], f)
+                         bonus_sales_upgrade_cost_now, bonus_sales_upgrade_levl_now,
+
+                         self.mind, self.mind_stage, self.mind_group["time"][0], self.mind_group["repair"][0]], f)
 
     def return_to_main_menu(self):
         self.save_game()
@@ -396,6 +421,7 @@ class Main_game_logick:
             self.total_money_spent = self.total_money_spent + self.spent_per_turn + 2500
 
         self.game_mode = 'skip_a_move'
+
         video_background.bg_now = dir + '\\Data\\textures\\pause.mp4'
 
         self.save_game()
@@ -403,6 +429,10 @@ class Main_game_logick:
     def completion_of_the_skip_a_move(self):
         self.spent_per_turn = 0
         self.received_per_turn = 0
+
+        self.add_mind(1200)
+        self.day_mind_control()
+
         self.game_mode = 'game'
         video_background.bg_now = dir + '\\Data\\textures\\game.mp4'
 
@@ -438,13 +468,13 @@ class Main_game_logick:
         pygame.mixer.Sound.play(self.buy)
         pygame.time.delay(30)
 
-    def completion_of_the_repair(self):##################################################################
+    def completion_of_the_repair(self):  ##################################################################
         video_background.bg_now = dir + '\\Data\\textures\\activity.mp4'
         self.game_mode = 'warehouse'
         pygame.mixer.Sound.play(self.repair_fail)
         pygame.time.delay(30)
 
-    def cancellation_of_repairs(self):##################################################################
+    def cancellation_of_repairs(self):  ##################################################################
         video_background.bg_now = dir + '\\Data\\textures\\activity.mp4'
         self.game_mode = 'warehouse'
     
@@ -504,6 +534,67 @@ class Main_game_logick:
             pygame.mixer.Sound.play(self.lack_of)
             pygame.time.delay(30)
 
+    #
+    # работа с разумом ==================
+    #
+
+    def add_mind(self, mind, mind_group=None):  # добавление разума в глобальный или mind_group счетчик
+        if mind_group is None:
+            self.mind += mind
+        else:
+            if mind < self.mind_group[mind_group][1]:  # 1 - разум сейчас; 2 - максимальный разум
+                if mind + self.mind_group[mind_group][0] < self.mind_group[mind_group][1]:
+                    self.mind_group[mind_group][0] += mind
+                else:
+                    self.mind_group[mind_group][0] = self.mind_group[mind_group][1]
+        print("added mind")
+
+    def day_mind_control(self):  # изменение разума при окончании дня
+        self.add_mind(self.mind_on_sleep)
+        for i in self.mind_group.items():
+            print(i)
+            self.mind += i[1][0]
+            self.mind_group[i[0]][0] = 0
+            print(i)
+
+        if self.mind > 1000 and self.mind_stage >= 4:
+            self.mind = 1000
+            self.mind_stage = 4
+
+        elif self.mind > 1000:
+            self.mind = 0
+            self.mind_stage += 1
+            if self.mind_stage == 4:
+                pygame.mixer.music.unload()
+                pygame.mixer.music.load(mind_4)
+                pygame.mixer.music.play(loops=-1)
+
+        elif self.mind < 0 and self.mind_stage <= 1:
+            self.mind = 0
+            self.mind_stage = 1
+
+        elif self.mind < 0:
+            self.mind = 1000
+            self.mind_stage -= 1
+            if self.mind_stage == 3:
+                pygame.mixer.music.unload()
+                pygame.mixer.music.load(sound_1)
+                pygame.mixer.music.play(loops=-1)
+
+        if self.mind_stage == 1:
+            pygame.mixer.music.set_volume(1)
+        elif self.mind_stage == 2:
+            pygame.mixer.music.set_volume(0.7)
+        elif self.mind_stage == 3:
+            pygame.mixer.music.set_volume(0.3)
+        elif self.mind_stage == 4:
+            pygame.mixer.music.set_volume(0.7)
+
+    #
+    #
+    #
+
+
 class Background:
     def __init__(self):
         self.bg_now = dir + '\\Data\\textures\\main_menu.mp4'
@@ -527,7 +618,8 @@ class Background:
 
 
 def every_second_function():
-    if GAME.game_mode != 'main-menu' and GAME.game_mode != 'skip_a_move' and GAME.DAY != 0 and not hallucination.live_hallucination and GAME.game_mode != 'holl':
+    if GAME.game_mode != 'main-menu' and GAME.game_mode != 'skip_a_move' and GAME.DAY != 0 and \
+            not hallucination.live_hallucination and GAME.game_mode != 'holl' and GAME.mind_stage == 4:
         if random.randint(1, 5) == 1 and not hallucination.is_real:
             entity = random.choice(['gallows', 'shadow'])
             if entity == 'gallows':
@@ -575,6 +667,19 @@ def control_point():
     GAME.game_mode = 'skip_a_move'
     video_background.bg_now = dir + '\\Data\\textures\\pause.mp4'
 
+
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+
+
 GAME = Main_game_logick()
 video_background = Background()
 hallucination = Hallucination()
@@ -588,13 +693,17 @@ center_y = HEIGHT
 
 #---------------------------------------------------Инициализация кнопок
 #-------------------------главное меню
-play_btn = Button(dir + '\\Data\\textures\\buttons\\menu_btn', xy=[center_WIDTH, 200], WIDTH_HEIGHT=[180, 60], sound=button_sound, text=['Играть', WHITE], target=GAME.start_new_game)
-load_btn = Button(dir + '\\Data\\textures\\buttons\\menu_btn', xy=[center_WIDTH, 300], WIDTH_HEIGHT=[180, 60], sound=button_sound, text=['Загрузить', WHITE], target=GAME.load_game)
-out_btn = Button(dir + '\\Data\\textures\\buttons\\menu_btn', xy=[center_WIDTH, 450], WIDTH_HEIGHT=[180, 60], sound=button_sound, text=['Выйти', WHITE], target=GAME.exit_game)
+play_btn = Button(dir + '\\Data\\textures\\buttons\\menu_btn', xy=[center_WIDTH, 200], WIDTH_HEIGHT=[180, 60],
+                  sound=button_sound, text=['Играть', WHITE], target=GAME.start_new_game)
+load_btn = Button(dir + '\\Data\\textures\\buttons\\menu_btn', xy=[center_WIDTH, 300], WIDTH_HEIGHT=[180, 60],
+                  sound=button_sound, text=['Загрузить', WHITE], target=GAME.load_game)
+out_btn = Button(dir + '\\Data\\textures\\buttons\\menu_btn', xy=[center_WIDTH, 450], WIDTH_HEIGHT=[180, 60],
+                 sound=button_sound, text=['Выйти', WHITE], target=GAME.exit_game)
 btn_group_main_menu = pygame.sprite.Group(play_btn, load_btn, out_btn)
 #-------------------------Меню паузы
 save_and_exit_btn = Button(dir + '\\Data\\textures\\buttons\\menu_btn',
-                           xy=[center_WIDTH, 200], WIDTH_HEIGHT=[300, 60], sound=button_sound, text=['Сохранить и выйти', WHITE], target=GAME.return_to_main_menu)
+                           xy=[center_WIDTH, 200], WIDTH_HEIGHT=[300, 60], sound=button_sound,
+                           text=['Сохранить и выйти', WHITE], target=GAME.return_to_main_menu)
 btn_group_game_menu = pygame.sprite.Group(save_and_exit_btn)
 #-------------------------Рабочий стол
 game_shop_btn = Button(dir + '\\Data\\textures\\buttons\\shop', xy=[50, 50], WIDTH_HEIGHT=[50, 50], sound=button_sound, text=['', WHITE], target=GAME.shoping)
@@ -650,11 +759,13 @@ entity_group_hallucination = pygame.sprite.Group(hallucination)
 screamer_group_hallucination = pygame.sprite.Group(screamer)
 
 one_second_counter = 0
+fps_counter = 0
+
 
 while GAME.is_running:
-    if one_second_counter == 20:
+    if one_second_counter == 60 and GAME.game_mode != "main-menu":
         one_second_counter = 0
-        every_second_function()
+        GAME.add_mind(25, "time")
     events = pygame.event.get()
     clock.tick(FPS)
 
@@ -695,7 +806,7 @@ while GAME.is_running:
 
     elif GAME.game_mode == 'game'and not video_background.drow_holl:
         main_text.print_text('День: ' + str(GAME.DAY + 1), 915, 25)
-        main_text.print_text('Сознание: ' + str(GAME.mind), 915, 50)
+        main_text.print_text('Сознание: ' + str(GAME.mind_stage), 915, 50)
         btn_group_game_table.update()
         btn_group_game_table.draw(screen)
 
@@ -733,7 +844,7 @@ while GAME.is_running:
                 main_text.print_text('Цена: ' + str(int(round(((int(GAME.price_PC) + GAME.old_repair_cost_PC) * GAME.repair_bonus) + int(GAME.price_PC) + 4500))) + ' ₽', 50, 100)
                 
             main_text.print_text('Поломки: ' + str(GAME.status_PC) + ' %', 50, 150)
-            main_text.print_text('Стоимость починки: ' + str(repair_cost_PC) + ' ₽', 50, 200)
+            main_text.print_text('Стоимость починки: ' + str(GAME.repair_cost_PC) + ' ₽', 50, 200)
             main_text.print_text('Ваш счёт: ' + str(GAME.MONEY) + ' ₽', 800, 50)
 
         btn_group_repair.update()
@@ -796,6 +907,9 @@ while GAME.is_running:
         btn_group_repair_game.update()
         btn_group_repair_game.draw(screen)
 
+        background_image = pygame.Surface(screen.get_size(), pygame.SRCALPHA)
+        pygame.draw.rect(background_image, (0, 0, 0, 50), (45, 5, 530, 435))
+
         main_text.print_text('Информация', 50, 10)
         main_text.print_text('Количество денег: ' + str(GAME.MONEY) + ' ₽', 50, 50)
         main_text.print_text('Количество Очков Навыка: ' + str(GAME.SKILLS) + '  ОН', 50, 80)
@@ -817,6 +931,9 @@ while GAME.is_running:
         main_text.print_text('Всего денег потрачено: ' + str(GAME.total_money_spent) + ' ₽', 50, 350)
         main_text.print_text('Всего компьютеров продано: ' + str(GAME.total_sold), 50, 380)
 
+        screen.blit(background_image, (0, 0))
+
+
     elif GAME.game_mode == 'holl':
         if hallucination.is_real and hallucination.entity != '':
             entity_group_hallucination.update()
@@ -832,4 +949,9 @@ while GAME.is_running:
 
     MCT.check()
     pygame.display.update()
-    one_second_counter = one_second_counter + 1
+    fps_counter += 1
+    if fps_counter == 30:
+        fps_counter = 0
+        if GAME.game_mode != "main-menu":
+            one_second_counter += 1
+
