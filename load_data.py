@@ -53,12 +53,12 @@ def get_data_for_new_game():
     DAY = 0
     SKILLS = 1
 
-    SKILL_BONUS = 0
+    SKILL_BONUS = 1
     current_computer_name = ""
     current_computer_price = 0
     current_computer_status = 0
-    repair_bonus = 0
-    bonus_sales = 0
+    repair_bonus = 0.01
+    bonus_sales = 0.001
 
     DEBT = 100000
     stocks_cost = random.randint(11000, 25000)

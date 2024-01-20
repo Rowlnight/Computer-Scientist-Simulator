@@ -334,7 +334,7 @@ class Trading_slot(pygame.sprite.Sprite):
                 main_text.print_text(self.name, self.x + 23, self.y + 10)
                 main_text.print_text(str(self.price) + " ₽", self.x + 23, self.y + 30)
                 if self.buyer:
-                    main_text.print_text("Есть покупатель!", self.x + 400, self.y + 30)
+                    main_text.print_text("Есть покупатель!", self.x + 300, self.y + 30)
             else:
                 main_text.print_text("Пустой слот", self.x + 23, self.y + 10)
 
@@ -468,7 +468,7 @@ class Main_game_logick:
             5,
             self.repair_bonus_upgrade_levl_now,
             "improve_repair_bonus",
-            0.1,
+            0.01,
         )
 
         self.bonus_sales_upgrade = Improvements(
@@ -479,7 +479,7 @@ class Main_game_logick:
             5,
             self.bonus_sales_upgrade_levl_now,
             "improve_bonus_sales",
-            0.05,
+            0.001,
         )
 
     def get_plot(self):
@@ -619,7 +619,7 @@ class Main_game_logick:
             5,
             self.repair_bonus_upgrade_levl_now,
             "improve_repair_bonus",
-            0.1,
+            0.01,
         )
         self.bonus_sales_upgrade = Improvements(
             430,
@@ -629,7 +629,7 @@ class Main_game_logick:
             5,
             self.bonus_sales_upgrade_levl_now,
             "improve_bonus_sales",
-            0.05,
+            0.001,
         )
 
         if self.mind_stage == 4:
@@ -728,7 +728,7 @@ class Main_game_logick:
 
     def skip_a_move(self):
         self.DAY = self.DAY + 1
-        self.MONEY = self.MONEY - 800
+        self.MONEY = self.MONEY - 500
 
         standart_product_1.recover()
         standart_product_2.recover()
@@ -744,7 +744,6 @@ class Main_game_logick:
                 if difference <= 0:
                     slot.buyer = True
                 else:
-                    print(difference // 1000)
                     if random.randint(0, difference // 1000) == 0:
                         slot.buyer = True
 
@@ -1319,8 +1318,8 @@ game_sale_btn = Button(
     text=["Продать", WHITE],
     target=GAME.sale,
 )
-btn_group_repair_1 = pygame.sprite.Group(game_trade_btn)
-btn_group_repair_2 = pygame.sprite.Group(game_repair_btn, game_sale_btn)
+btn_group_repair_1 = pygame.sprite.Group(game_repair_btn)
+btn_group_repair_2 = pygame.sprite.Group(game_sale_btn)
 # -------------------------Починка
 repair_btn = Button(
     dir + "\\Data\\textures\\buttons\\EUG_button",
@@ -1351,6 +1350,7 @@ game_repair_info_show_btn = Button(
 btn_group_repair_game = pygame.sprite.Group(
     game_repair_exit_btn, repair_btn, game_repair_info_show_btn
 )
+
 # -------------------------Информация о починке
 game_trade_repair_info_btn = Button(
     dir + "\\Data\\textures\\buttons\\EUG_button",
@@ -1373,7 +1373,7 @@ game_slot_cancellation_btn = Button(
 )
 game_slot_applay_btn = Button(
     dir + "\\Data\\textures\\buttons\\EUG_button",
-    xy=[300, 600],
+    xy=[174, 600],
     WIDTH_HEIGHT=[180, 60],
     sound=button_sound,
     text=["Готово", WHITE],
@@ -1648,8 +1648,8 @@ while GAME.is_running:
         btn_group_trade.draw(screen)
 
     elif GAME.game_mode == "warehouse" and not video_background.drow_holl:
-        btn_group_repair_1.update()
-        btn_group_repair_1.draw(screen)
+        btn_group_trade.update()
+        btn_group_trade.draw(screen)
         if not GAME.can_buy:
             main_text.print_text(
                 f"В наличии компьютер: {GAME.current_computer_name}", 50, 50
@@ -1661,6 +1661,9 @@ while GAME.is_running:
 
             btn_group_repair_2.update()
             btn_group_repair_2.draw(screen)
+            if GAME.current_computer_status:
+                btn_group_repair_1.update()
+                btn_group_repair_1.draw(screen)
 
     elif GAME.game_mode == "repair_pc" and not video_background.drow_holl:
         main_text.print_text("Минимальная версия: ", 650, 260)
@@ -1712,14 +1715,15 @@ while GAME.is_running:
         main_text.print_text("13 - I_Hp1wBmE1 - МТ(57°C),  тип:  улучшенный", 50, 410)
 
         main_text.print_text("Системы охлаждения", 587, 10)
-        main_text.print_text("1 - v-u16metqa - МО(30°C), 5000₽", 587, 50)
-        main_text.print_text("2 - v0-na8hoxk - МО(40°C), 4500₽", 587, 80)
-        main_text.print_text("3 - i5x9-eziux - МО(60°C), 3000₽", 587, 110)
-        main_text.print_text("4 - ke_urm_9l9 - МО(80°C), 1500₽", 587, 140)
-        main_text.print_text("5 - 64ae62om-n - МО(100°C), 500₽", 587, 170)
-        main_text.print_text("6 - c4-om4xmat - МО(54°C), 3500₽", 587, 200)
-        main_text.print_text("7 - UIc0-vkftF - МО(70°C), 2000₽", 587, 230)
-        main_text.print_text("8 - b9-jg6q2jV - МО(75°C), 1768₽", 587, 260)
+        main_text.print_text("1 - v-u16metqa - МО(20°C), 4499₽", 587, 50)
+        main_text.print_text("2 - v0-na8hoxk - МО(40°C), 2200₽", 587, 80)
+        main_text.print_text("3 - i5x9-eziux - МО(60°C), 1680₽", 587, 110)
+        main_text.print_text("4 - ke_urm_9l9 - МО(80°C), 1300₽", 587, 140)
+        main_text.print_text("5 - 64ae62om-n - МО(100°C), 1100₽", 587, 170)
+        main_text.print_text("6 - c4-om4xmat - МО(54°C), 1899₽", 587, 200)
+        main_text.print_text("7 - UIc0-vkftF - МО(70°C), 1550₽", 587, 230)
+        main_text.print_text("8 - b9-jg6q2jV - МО(75°C), 1433₽", 587, 260)
+        main_text.print_text("9 - vex-u16na8 - МО(30°C), 2500₽ (Нет в продаже)", 587, 290)
 
         btn_group_repair_info.update()
         btn_group_repair_info.draw(screen)
@@ -1749,7 +1753,7 @@ while GAME.is_running:
             350,
             225,
         )
-        big_text.print_text("Траты на себя: 800 ₽", 350, 175)
+        big_text.print_text("Траты на себя: 500 ₽", 350, 175)
 
         btn_group_next_move.update()
         btn_group_next_move.draw(screen)
